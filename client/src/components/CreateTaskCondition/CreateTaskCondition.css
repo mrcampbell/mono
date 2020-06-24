@@ -1,0 +1,36 @@
+.initial-droppable-wrapper {
+  border: 1px solid white;
+}
+
+.pre-targets-droppable-wrapper {
+  border: 1px solid blue;
+}
+
+.disqualifying-droppable-wrapper {
+  border: 1px solid red;
+}
+
+.target-droppable-wrapper {
+  border: 1px solid green;
+}
+
+.droppable {
+  min-height: 200px;
+}
+
+/* The <Droppable /> element */
+.droppable > * {
+  min-height: 100px;
+}
+
+.droppable-and-title {
+  flex-basis: 100%;
+  padding: 0 10px;
+}
+
+
+.droppable-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}

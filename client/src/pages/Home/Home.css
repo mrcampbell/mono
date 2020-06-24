@@ -1,0 +1,8 @@
+.initial-droppable-wrapper {
+  border: 1px solid white;
+}
+
+.pretargets-droppable-wrapper {
+  border: 1px solid yellow;
+  height: 200px;
+}

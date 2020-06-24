@@ -1,0 +1,7 @@
+{
+  "HOME": "/",
+  "LOGIN": "/login",
+  "LOGOUT": "/logout",
+  "PROGRESSES": "/progresses",
+  "TASKS": "/tasks"
+}

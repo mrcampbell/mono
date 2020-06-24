@@ -1,0 +1,39 @@
+version: "3.2"
+services:
+  redis:
+    image: "bitnami/redis:latest"
+    command: redis-server --requirepass hubbie_pass
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/usr/local/etc/redis
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    restart: always
+  # postgres:
+  #   image: postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: hubbie
+  #     POSTGRES_PASSWORD: hubbie_pass
+  #     PGDATA: ./pgdata:/var/lib/postgresql/data
+  #   ports: 
+  #     - "6543:5432"
+  # worker:
+  #   restart: always
+  #   build:
+  #     context: .
+  #     dockerfile: dev.Dockerfile
+  #   volumes:
+  #     - .:/usr/src/app
+  #   command: npm run dev:worker
+  # core:
+  #   restart: always  
+  #   build:
+  #     context: .
+  #     dockerfile: dev.Dockerfile
+  #   ports:
+  #     - "4000:4000"
+  #   volumes:
+  #     - .:/usr/src/app
+    # command: npm run dev:core
