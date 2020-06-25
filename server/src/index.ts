@@ -8,6 +8,7 @@ import progresses from "./graphql/resolvers/query/progresses";
 import context from "./graphql/context/context";
 import proxy_salesforce_describe_object from "./graphql/resolvers/query/proxy_salesforce_describe_object";
 import proxy_salesforce_list_all_objects from "./graphql/resolvers/query/proxy_salesforce_list_all_objects";
+import { progressUpdateQueue } from "./queues";
 
 const USER_123 = "user_123";
 
@@ -82,13 +83,20 @@ const pubsub = new PubSub();
 
 const subscribedUsers = new Set();
 
-let count = 0;
-setInterval(() => {
-  count = count + 1;
-  pubsub.publish(USER_123, {
-    progresses: [{ count, task_id: "1", date_key: "YYYYMMDD" }],
-  });
-}, 3000);
+// let count = 0;
+// setInterval(() => {
+//   count = count + 1;
+//   pubsub.publish(USER_123, {
+//     progresses: [{ count, task_id: "1", date_key: "YYYYMMDD" }],
+//   });
+// }, 3000);
+
+progressUpdateQueue.process(function(job: any, done: any){
+    console.log(job.data)
+    pubsub.publish(job.data.user_id, {progresses: job.data.progresses})
+  done();
+
+});
 
 const resolvers = {
   Query: {
