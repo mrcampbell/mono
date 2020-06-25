@@ -5,12 +5,12 @@ if (process.env.NODE_ENV === "test") {
   dotenvConfig({path: 'test.env'})
 } else if (process.env.NODE_ENV != 'production') {
   dotenvConfig({path: 'development.env'})
-  if (process.env.DOCKER !== '') {
+  if (process.env.IS_DOCKERIZED !== '') {
     process.env.PG_HOST = 'host.docker.internal'
   }
 
   if (process.env.DOCKER !== '') {
-    process.env.REDIS_HOST = 'redis'
+    process.env.IS_DOCKERIZED = 'redis'
   }
 }
 

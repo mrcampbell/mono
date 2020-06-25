@@ -3,12 +3,14 @@ import getAccessTokenFromCookie from "./auth/getAccessTokenFromCookie";
 import config from "./config";
 import { createConnection, getRepository } from "typeorm";
 import { typeORMConfig } from "./config/typeorm";
-import login_with_salesforce from "./graphql/resolvers/query/login_with_salesforce";
+import login_with_salesforce from "./graphql/resolvers/mutations/login_with_salesforce";
 import progresses from "./graphql/resolvers/query/progresses";
 import context from "./graphql/context/context";
 import proxy_salesforce_describe_object from "./graphql/resolvers/query/proxy_salesforce_describe_object";
 import proxy_salesforce_list_all_objects from "./graphql/resolvers/query/proxy_salesforce_list_all_objects";
 import { progressUpdateQueue } from "./queues";
+import { TaskCondition } from "./entities/TaskCondition";
+import { User } from "./entities/User";
 
 const USER_123 = "user_123";
 
@@ -22,7 +24,16 @@ const typeDefs = gql`
 
   type TaskCondition {
     id: ID!
+    name: String!
     organization_id: String!
+    object_type: String!
+    field_name: String!
+    pre_target_values: [String]!
+    target_values: [String]!
+    disqualifying_values: [String]!
+  }
+
+  input CreateTaskCondition {
     name: String!
     object_type: String!
     field_name: String!
@@ -72,6 +83,7 @@ const typeDefs = gql`
 
   type Mutation {
     login_with_salesforce(code: String!): AuthenticationResponse
+    create_task_condition(input: CreateTaskCondition): TaskCondition
   }
 
   type Subscription {
@@ -83,19 +95,10 @@ const pubsub = new PubSub();
 
 const subscribedUsers = new Set();
 
-// let count = 0;
-// setInterval(() => {
-//   count = count + 1;
-//   pubsub.publish(USER_123, {
-//     progresses: [{ count, task_id: "1", date_key: "YYYYMMDD" }],
-//   });
-// }, 3000);
-
-progressUpdateQueue.process(function(job: any, done: any){
-    console.log(job.data)
-    pubsub.publish(job.data.user_id, {progresses: job.data.progresses})
+progressUpdateQueue.process(function (job: any, done: any) {
+  // console.log(job.data);
+  pubsub.publish(job.data.user_id, { progresses: job.data.progresses });
   done();
-
 });
 
 const resolvers = {
@@ -109,6 +112,35 @@ const resolvers = {
   },
   Mutation: {
     login_with_salesforce,
+    create_task_condition: async (
+      parent: any,
+      args: any,
+      context: any,
+      info: any
+    ) => {
+      const { name, object_type, field_name, pre_target_values, target_values, disqualifying_values } = args.input;
+      const tc: TaskCondition = {
+        name,
+        object_type,
+        field_name, 
+        pre_target_values,
+        target_values,
+        disqualifying_values,
+        organization_id: context.user.organization_id,
+      }
+      try {
+
+        return getRepository(TaskCondition).save(tc).then((data: any) => {
+          console.log("GOT" + data)
+          return data
+        }).catch(err => {
+          console.log("Error yo")
+          console.log(err)
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    },
   },
   Subscription: {
     progresses: {

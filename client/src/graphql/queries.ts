@@ -21,6 +21,20 @@ export const MUTATION_LOGIN_WITH_SALESFORCE = gql`
   }
 `;
 
+export const MUTATION_CREATE_TASK_CONDITION = gql`
+mutation create_task_condition($input: CreateTaskCondition) {
+  create_task_condition(input:$input) {
+    id
+    name
+    organization_id
+    object_type
+    field_name
+    pre_target_values
+    target_values
+    disqualifying_values
+  }
+}`
+
 export const QUERY_PROGRESSES = gql`
   query {
     progresses {

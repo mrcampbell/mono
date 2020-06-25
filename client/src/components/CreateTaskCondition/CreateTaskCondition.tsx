@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useQuery } from "@apollo/react-hooks";
-import { Formik, Field, Form, withFormik, FormikValues } from "formik";
+import { useQuery, useMutation } from "@apollo/react-hooks";
+import { Field, Form, useFormik, FormikHelpers } from "formik";
 import "./CreateTaskCondition.css";
 
 import {
   QUERY_PROXY_SALESFORCE_DESCRIBE_OBJECT,
   QUERY_PROXY_SALESFORCE_LIST_ALL_OBJECTS,
+  MUTATION_CREATE_TASK_CONDITION,
 } from "../../graphql/queries";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
@@ -45,15 +46,17 @@ const reorder = (
   return result;
 };
 
-const InnerForm = (input: any) => {
-  const {
-    handleSubmit: formikHandleSubmit,
-    values: formikValues,
-    setFieldValue: formikSetFieldValue,
-    isSubmitting: formikIsSubmitting,
-  } = input;
+interface FormValues {
+    object_type: string;
+    field_name: string;
+    pre_target_values: string[],
+    target_values: string[],
+    disqualifying_values: string[],
+    name: string;
+}
 
-  const [objectName, setObjectName] = useState("");
+export default () => {
+  const [objectType, setObjectType] = useState("");
   const [objectLabel, setObjectLabel] = useState("");
 
   const [fieldName, setFieldName] = useState("");
@@ -78,9 +81,35 @@ const InnerForm = (input: any) => {
     loading: describe_object_loading,
     error: describe_object_error,
   } = useQuery(QUERY_PROXY_SALESFORCE_DESCRIBE_OBJECT, {
-    skip: objectName === "",
-    variables: { name: objectName },
+    skip: objectType === "",
+    variables: { name: objectType },
   });
+
+  const [create_task_condition, { data: create_task_condition_data, error: create_task_condition_error, loading: create_task_condition_loading }] = useMutation(
+    MUTATION_CREATE_TASK_CONDITION,
+    {onError: (err) => {
+      console.log(err)
+    }}
+  );
+
+  const formik = useFormik({
+    initialValues: {
+      object_type: "",
+      field_name: "",
+      pre_target_values: [],
+      target_values: [],
+      disqualifying_values: [],
+      name: "",
+    } as FormValues,
+    onSubmit: (values: FormValues, formikHelpers: FormikHelpers<FormValues>) => {
+      console.log(values)
+      create_task_condition({variables: {input: values}})
+      formikHelpers.setSubmitting(false)
+    },
+    onReset: () => {
+
+    },
+  })
 
   if (all_objects_loading) {
     return <div>Loading All Objects...</div>;
@@ -134,15 +163,15 @@ const InnerForm = (input: any) => {
         break;
       case droppableIDPreTarget:
         setPreTargetItems(items);
-        formikSetFieldValue("preTargetValues", values);
+        formik.setFieldValue("pre_target_values", values);
         break;
       case droppableIDTarget:
         setTargetItems(items);
-        formikSetFieldValue("targetValues", values);
+        formik.setFieldValue("target_values", values);
         break;
       case droppableIDDisqualifying:
         setDisqualifierItems(items);
-        formikSetFieldValue("disqualifyingValues", values);
+        formik.setFieldValue("disqualifying_values", values);
         break;
       default:
         console.error("unknown list: ", id);
@@ -198,29 +227,31 @@ const InnerForm = (input: any) => {
 
   return (
     <div className="ProgressesPage">
-      <Formik
-        initialValues={{
-          objectName: "",
-          objectField: "",
-          preTargetValues: [],
-          targetValues: [],
-          disqualifyingValues: [],
-        }}
-        onSubmit={formikHandleSubmit}
+<form       
+        onSubmit={formik.handleSubmit}
       >
-        <Form>
-          <label htmlFor="objectName">Object</label>
-          <Field
-            as="select"
-            name="objectName"
+        <label htmlFor="name">Name</label>
+          <input
+            name="name"
             type="text"
-            value={formikValues.objectName}
+            value={formik.values.name}
+            onChange={(e: any) => {
+              const value = e.target.value;
+              // formik.setFieldValue("name", value);
+              formik.handleChange(e)
+            }}
+          />
+          <label htmlFor="object_type">Object</label>
+          <select
+            name="object_type"
+            value={formik.values.object_type}
             onChange={(e: any) => {
               const value = e.target.value;
               const object = getObjectByName(value);
-              setObjectName(value);
+              setObjectType(value);
               setObjectLabel(object.label);
-              formikSetFieldValue("objectName", value);
+              // formik.setFieldValue("object_type", value);
+              formik.handleChange(e)
             }}
           >
             <option value="">(Select an Object)</option>
@@ -231,25 +262,24 @@ const InnerForm = (input: any) => {
                 </option>
               )
             )}
-          </Field>
+          </select>
           {describe_object_loading && (
-            <div>Loading Properties of {objectName}...</div>
+            <div>Loading Properties of {objectType}...</div>
           )}
           {describe_object_data && (
             <>
-              <label htmlFor="objectField">Field</label>
-              <Field
-                as="select"
-                name="objectField"
-                type="text"
-                value={formikValues.objectField}
+              <label htmlFor="field_name">Field</label>
+              <select
+                name="field_name"
+                value={formik.values.field_name}
                 onChange={(e: any) => {
                   const value = e.target.value;
                   const field = getFieldByName(value);
                   setFieldName(value);
                   setFieldLabel(field.label);
                   setInitialItems(field.picklist_values);
-                  formikSetFieldValue("objectField", value);
+                  // formik.setFieldValue("field_name", value);
+                  formik.handleChange(e)
                 }}
               >
                 <option value="">(Select an Field)</option>
@@ -260,7 +290,7 @@ const InnerForm = (input: any) => {
                     </option>
                   )
                 )}
-              </Field>
+              </select>
             </>
           )}
           {(initialItems.length > 0 || hasMovedItems) && (
@@ -408,21 +438,21 @@ const InnerForm = (input: any) => {
             </div>
           )}
           {(initialItems.length > 0 || hasMovedItems) && (
-            <button type="submit" disabled={formikIsSubmitting}>
+            <button type="submit" disabled={formik.isSubmitting}>
               Submit
             </button>
           )}
-        </Form>
-      </Formik>
+      </form>
     </div>
   );
 };
 
-export default withFormik({
-  handleSubmit: (values: FormikValues, { setSubmitting }) => {
-    console.log("SUBMITTING", values);
-    setTimeout(() => {
-      setSubmitting(false);
-    }, 1000);
-  },
-})(InnerForm);
+// export default withFormik({
+//   handleSubmit: (values: formik.values, { setSubmitting }) => {
+//     console.log("SUBMITTING", values);
+//     setTimeout(() => {
+      
+//       setSubmitting(false);
+//     }, 1000);
+//   },
+// })(InnerForm);
