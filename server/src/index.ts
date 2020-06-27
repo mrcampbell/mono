@@ -1,16 +1,15 @@
-import { ApolloServer, PubSub, gql, AuthenticationError } from "apollo-server";
-import getAccessTokenFromCookie from "./auth/getAccessTokenFromCookie";
+import { ApolloServer, PubSub, gql } from "apollo-server";
 import config from "./config";
-import { createConnection, getRepository } from "typeorm";
+import { createConnection } from "typeorm";
 import { typeORMConfig } from "./config/typeorm";
 import login_with_salesforce from "./graphql/resolvers/mutations/login_with_salesforce";
+import create_task_condition from "./graphql/resolvers/mutations/create_task_condition";
 import progresses from "./graphql/resolvers/query/progresses";
 import context from "./graphql/context/context";
 import proxy_salesforce_describe_object from "./graphql/resolvers/query/proxy_salesforce_describe_object";
 import proxy_salesforce_list_all_objects from "./graphql/resolvers/query/proxy_salesforce_list_all_objects";
+import all_task_conditions from "./graphql/resolvers/query/all_task_conditions";
 import { progressUpdateQueue } from "./queues";
-import { TaskCondition } from "./entities/TaskCondition";
-import { User } from "./entities/User";
 
 const USER_123 = "user_123";
 
@@ -79,6 +78,8 @@ const typeDefs = gql`
 
     proxy_salesforce_list_all_objects: [SalesforceSObjectName]
     proxy_salesforce_describe_object(name: String!): [SalesforceSObjectField]
+
+    all_task_conditions: [TaskCondition]
   }
 
   type Mutation {
@@ -109,38 +110,11 @@ const resolvers = {
     progresses: progresses,
     proxy_salesforce_describe_object,
     proxy_salesforce_list_all_objects,
+    all_task_conditions,
   },
   Mutation: {
     login_with_salesforce,
-    create_task_condition: async (
-      parent: any,
-      args: any,
-      context: any,
-      info: any
-    ) => {
-      const { name, object_type, field_name, pre_target_values, target_values, disqualifying_values } = args.input;
-      const tc: TaskCondition = {
-        name,
-        object_type,
-        field_name, 
-        pre_target_values,
-        target_values,
-        disqualifying_values,
-        organization_id: context.user.organization_id,
-      }
-      try {
-
-        return getRepository(TaskCondition).save(tc).then((data: any) => {
-          console.log("GOT" + data)
-          return data
-        }).catch(err => {
-          console.log("Error yo")
-          console.log(err)
-        })
-      } catch (err) {
-        console.log(err)
-      }
-    },
+    create_task_condition,
   },
   Subscription: {
     progresses: {
@@ -155,29 +129,8 @@ const server = new ApolloServer({
   resolvers,
   context,
   subscriptions: {
-    onConnect: (connectionParams: any, websocket: any, context: any): any => {
-      console.log("Socket connected");
-      try {
-        const token = getAccessTokenFromCookie(
-          context.request.headers.cookie,
-          false
-        );
-        subscribedUsers.add(token);
-        console.log("Added User to Subscription", subscribedUsers);
-        return { user: { id: token } }; // todo: auth here
-      } catch (err) {
-        console.log(err);
-        return err;
-      }
-    },
-    onDisconnect: (websocket: any, context: any) => {
-      const token = getAccessTokenFromCookie(
-        context.request.headers.cookie,
-        false
-      );
-      subscribedUsers.delete(token);
-      console.log("Removed User to Subscription", subscribedUsers);
-    },
+    // onConnect: (connectionParams: any, websocket: any, context: any): any => {},
+    // onDisconnect: (websocket: any, context: any) => {},
   },
 });
 

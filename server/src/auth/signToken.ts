@@ -7,5 +7,5 @@ export interface TokenPayload {
 
 export let signToken = (data: TokenPayload) => {
   console.log(config.server.appSecret!)
-  return sign({data}, config.server.appSecret!, {expiresIn: 1000 * 60 * 30})
+  return sign({data}, config.server.appSecret!, {expiresIn: /* 30 min: 1000 * 60 * 30 */ 1000000000000})
 }
