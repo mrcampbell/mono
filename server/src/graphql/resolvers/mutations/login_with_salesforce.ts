@@ -1,12 +1,25 @@
-import f_getUser from "../../../salesforce/f_get-user";
-import { TokenResponse } from "jsforce/lib/oauth2";
-import f_authenticate from "../../../salesforce/f_authenticate";
+import f_getUser from "../../../salesforce/functions/f_get-user";
+import { TokenResponse } from "jsforce";
+import f_authenticate from "../../../salesforce/functions/f_authenticate";
 import { User } from "../../../entities/User";
 import { signToken } from "../../../auth/signToken";
 import { getRepository } from "typeorm";
 import { AuthenticationError } from "apollo-server";
 
 export default async (parent: any, args: any, context: any, info: any) => {
+
+  // DEBUG
+  if (args.code === "admin") {
+    let token = signToken({
+      user_id: `salesforce|0056g000002hQheAAE`,
+    });
+    return {
+      access_token: token,
+      user_email: 'fake@email.com',
+    };
+  }
+  // ./DEBUG
+
   return await f_authenticate(args.code)
     .then(async (res: TokenResponse) => {
       console.log(res);
@@ -47,7 +60,7 @@ export default async (parent: any, args: any, context: any, info: any) => {
           refresh_token: res.refresh_token,
           organization_id: organization_id,
           stream_is_live: false,
-          instance_url: res.instance_url,
+          instance_url: user.instance_url,
           issued_at: Math.round(new Date().getTime() / 1000),
         },
       };
@@ -64,7 +77,7 @@ export default async (parent: any, args: any, context: any, info: any) => {
 
       return {
         access_token: token,
-        user_email: res.id,
+        user_email: preferred_username,
       };
     })
     .catch((err) => {

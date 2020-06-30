@@ -3,7 +3,7 @@ import { Connection } from "jsforce";
 import { User } from "../../../entities/User";
 import { SalesforceMeta } from "../../../entities/SalesforceMeta";
 import config from "../../../config";
-import f_listObjects from "../../../salesforce/f_list-objects";
+import f_listObjects from "../../../salesforce/functions/f_list-objects";
 
 export default async (
   parent: any,

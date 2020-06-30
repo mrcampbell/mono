@@ -10,6 +10,7 @@ import proxy_salesforce_describe_object from "./graphql/resolvers/query/proxy_sa
 import proxy_salesforce_list_all_objects from "./graphql/resolvers/query/proxy_salesforce_list_all_objects";
 import all_task_conditions from "./graphql/resolvers/query/all_task_conditions";
 import { progressUpdateQueue } from "./queues";
+import SynchronousEventBus from "./queues/sync";
 
 const USER_123 = "user_123";
 
@@ -94,13 +95,6 @@ const typeDefs = gql`
 
 const pubsub = new PubSub();
 
-const subscribedUsers = new Set();
-
-progressUpdateQueue.process(function (job: any, done: any) {
-  // console.log(job.data);
-  pubsub.publish(job.data.user_id, { progresses: job.data.progresses });
-  done();
-});
 
 const resolvers = {
   Query: {
@@ -132,9 +126,14 @@ const server = new ApolloServer({
     // onConnect: (connectionParams: any, websocket: any, context: any): any => {},
     // onDisconnect: (websocket: any, context: any) => {},
   },
+  tracing: true,
 });
 
 createConnection(typeORMConfig).then(() => {
+
+SynchronousEventBus.setup(pubsub);
+
+
   server.listen().then(({ url }) => {
     console.log(`🚀 Server ready at ${url}`);
   });

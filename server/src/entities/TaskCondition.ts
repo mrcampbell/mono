@@ -3,8 +3,8 @@ import { Entity, Column, PrimaryGeneratedColumn, Unique } from "typeorm";
 @Entity({ name: "task_conditions" })
 @Unique("UQ_NAMES_PER_ORG", ["organization_id", "name"])
 export class TaskCondition {
-  @PrimaryGeneratedColumn()
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
 
   @Column({
     length: 30,

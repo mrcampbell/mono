@@ -3,6 +3,9 @@ import config from '.';
 import { SalesforceMeta } from '../entities/SalesforceMeta';
 import { TaskCondition } from '../entities/TaskCondition';
 import { User } from '../entities/User';
+import { TaskEvent } from '../entities/TaskEvent';
+import { StreamEvent } from '../entities/StreamEvent';
+import { StreamEventFields } from '../entities/StreamEventFields';
 
 
 let shouldSynchronize = false;
@@ -21,6 +24,9 @@ export let typeORMConfig: ConnectionOptions = {
     SalesforceMeta,
     TaskCondition,
     User,
+    TaskEvent,
+    StreamEvent,
+    StreamEventFields,
   ],
   logging: true,
   host: config.postgres.host,
