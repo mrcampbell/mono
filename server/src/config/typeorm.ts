@@ -9,12 +9,12 @@ import { StreamEventFields } from '../entities/StreamEventFields';
 
 
 let shouldSynchronize = false;
-// if (
-//   process.env.NODE_ENV === "test" ||
-//   process.env.NODE_ENV === "dev" && process.env.SERVICE === "core"
-//   ) {
-//   shouldSynchronize = true;
-// }
+if (
+  process.env.NODE_ENV === "test" ||
+  process.env.NODE_ENV === "dev" && process.env.SERVICE === "core"
+  ) {
+  shouldSynchronize = true;
+}
 
 
 export let typeORMConfig: ConnectionOptions = {
@@ -28,14 +28,12 @@ export let typeORMConfig: ConnectionOptions = {
     StreamEvent,
     StreamEventFields,
   ],
-  logging: true,
+  logging: false,
   host: config.postgres.host,
   port: parseInt(config.postgres.port || '5432', 10),
   username: config.postgres.user,
   password: config.postgres.password,
   database: config.postgres.database,
   synchronize: shouldSynchronize,
-  dropSchema: false,
+  dropSchema: (process.env.NODE_ENV == "test") ? true : false,
 }
-
-

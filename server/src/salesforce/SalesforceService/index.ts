@@ -3,6 +3,7 @@ import { TokenResponse, Connection, OAuth2, DescribeSObjectResult, Field, Pickli
 import { SalesforceSObjectField, SalesforceSObjectPicklistEntry } from "../functions/f_describe-object";
 import { SalesforceSObjectMeta } from "../functions/f_list-objects";
 import config from "../../config";
+import MockSalesforceService from "./mock";
 const axios = require("axios").default;
 
 
@@ -88,6 +89,10 @@ return new Promise(async (resolve, reject) => {
 }
 
 export default () => {
+  if (process.env.NODE_ENV === "test") {
+    return new MockSalesforceService();
+  }
+
   if (!service) {
     service = new SalesforceService();
   }

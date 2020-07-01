@@ -87,7 +87,7 @@ export class StreamManager {
   }
 
   async LoadPreviousStreamClients(handler: StreamMessageHandler) {
-    await getRepository(SalesforceMeta).find().then(async (metas: SalesforceMeta[]) => {
+    return getRepository(SalesforceMeta).find().then(async (metas: SalesforceMeta[]) => {
       console.log("RELOADING")
       metas.forEach(async (m) => {
         await this.AddClient(m, handler);
@@ -96,9 +96,13 @@ export class StreamManager {
   }
 
   async AddClient(meta: SalesforceMeta, handler: StreamMessageHandler) {
-    const client = new StreamClient(meta, handler);
-    await client.Subscribe(STREAM_OBJECTS)
-    this.clients.set(meta.organization_id!, client)
+    return new Promise(async (resolve, reject) => {
+
+      const client = new StreamClient(meta, handler);
+      await client.Subscribe(STREAM_OBJECTS)
+      this.clients.set(meta.organization_id!, client)
+      return resolve();
+    })
   }
 
   HealthCheck(organization_id: string): Promise<any> {

@@ -23,5 +23,10 @@ export default async (
   connection: Connection,
   objectName: string
 ): Promise<SalesforceSObjectField[]> => {
-  return SalesforceService().DescribeObject(connection, objectName);
+  return SalesforceService().DescribeObject(connection, objectName).then(data => {
+    console.log("DESCRIBE OBJ")
+    console.log(JSON.stringify(data))
+    console.log("./DESCRIBE OBJ")
+    return data
+  })
 };

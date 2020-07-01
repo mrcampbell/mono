@@ -7,11 +7,10 @@ import { StreamEventFields } from "../entities/StreamEventFields";
 
 let dummyNumber = 0;
 
-const handler = (message: HStreamMessage): Promise<void> => {
+export const handler = (message: HStreamMessage): Promise<void> => {
   console.log(message);
+  let records = [] as StreamEvent[];
   try {
-    const eventRepo = getRepository(StreamEvent);
-
     message.record_ids.forEach(async (recordID) => {
       const event: StreamEvent = {
         change_type: message.change_type,
@@ -22,22 +21,24 @@ const handler = (message: HStreamMessage): Promise<void> => {
         last_modified_date_key: "YYYYMMDD",
         fields: new Array<StreamEventFields>(),
       };
-
+      
       message.fields.forEach((value: any, field: string) => {
         event.fields!.push({ field, value });
       });
-
-      await eventRepo.save(event).then((res) => {
-        console.log("saved new event!");
-        console.log(res);
-        return Promise.resolve();
-      });
+      
+      records.push(event);
+      
+    });
+    
+    return getRepository(StreamEvent).save(records).then((res) => {
+      console.log("saved new event!");
+      console.log(res);
+      return Promise.resolve();
     });
   } catch (err) {
     console.log(err);
     return Promise.resolve();
   }
-  return Promise.resolve()
 };
 
 export default class SynchronousEventBus {
@@ -45,23 +46,32 @@ export default class SynchronousEventBus {
   private static streamManager: StreamManager = new StreamManager();
 
   public static async setup(progressPubSub: PubSub) {
-    this.progressPubSub = progressPubSub;
+    return new Promise(async (resolve, reject) => {
 
-    await this.streamManager.LoadPreviousStreamClients(handler);
+      this.progressPubSub = progressPubSub;
 
-    setInterval(() => {
-      this.progressPubSub.publish(`user_123`, {
-        progresses: [
-          {
-            task_id: "123",
-            date_key: "20200102",
-            count: dummyNumber,
-          },
-        ],
-      });
-      console.log("published event");
-      dummyNumber++;
-    }, 3000);
+      await this.streamManager.LoadPreviousStreamClients(handler);
+
+      // TODO: REMOVE DEBUG
+      if (process.env.NODE_ENV !== "test") {
+
+        setInterval(() => {
+          this.progressPubSub.publish(`user_123`, {
+            progresses: [
+              {
+                task_id: "123",
+                date_key: "20200102",
+                count: dummyNumber,
+              },
+            ],
+          });
+          console.log("published event");
+          dummyNumber++;
+        }, 3000);
+      } // END REMOVE DEBUG
+        
+      return resolve();
+    })
   }
 
   public static addStream(meta: SalesforceMeta) {

@@ -1,5 +1,4 @@
 export default async (parent: any, args: any, context: any, info: any) => {
-  console.log("progresses")
   return [
     {
       count: 1,

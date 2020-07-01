@@ -20,7 +20,6 @@ export default async (
   try {
 
     return getRepository(TaskCondition).save(tc).then((data: any) => {
-      console.log("GOT" + data)
       return data
     }).catch(err => {
       console.log("Error yo")
