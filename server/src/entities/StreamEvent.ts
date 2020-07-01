@@ -36,6 +36,11 @@ export class StreamEvent {
   })
   last_modified_date_key?: string;
 
-  @OneToMany(type => StreamEventFields, field => field.id, {cascade: true, eager: true, nullable: false})
-  fields?: StreamEventFields[];
+  @Column({
+    nullable: false,
+  })
+  commit_timestamp?: Date;
+
+  @OneToMany(type => StreamEventFields, field => field.stream_event, {cascade: true, eager: true, nullable: false})
+  fields?: Array<StreamEventFields>;
 }

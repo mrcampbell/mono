@@ -60,7 +60,6 @@ it("returns progresses", (done) => {
     `,
   })
     .then((response) => {
-      console.log(response);
       expect(response.errors).toBeUndefined();
       done();
     })
@@ -95,7 +94,6 @@ it("creates first task condition", (done) => {
     `,
   })
     .then((data) => {
-      console.log(data);
       done();
     })
     .catch(done);
@@ -127,7 +125,6 @@ it("creates second task condition", (done) => {
     `,
   })
     .then((data) => {
-      console.log(data);
       done();
     })
     .catch(done);
@@ -159,7 +156,6 @@ it("creates third task condition", (done) => {
     `,
   })
     .then((data) => {
-      console.log(data);
       done();
     })
     .catch(done);
@@ -184,6 +180,7 @@ it("create event via sync event bus", async (done) => {
     object_type: "Account",
     last_modified_date_key: "20190101",
     organization_id: "00D6g000003rYYlEAM",
+    commit_timestamp: new Date(1592233856000)
   }
 
   const second: StreamEvent =  {
@@ -194,6 +191,7 @@ it("create event via sync event bus", async (done) => {
     object_type: "Account",
     last_modified_date_key: "20190101",
     organization_id: "00D6g000003rYYlEAM",
+    commit_timestamp: new Date(1592665856000)
   }
 
   await getRepository(StreamEvent).save([first, second])
@@ -209,12 +207,12 @@ it("create event via sync event bus", async (done) => {
     record_ids: ["123"],
     raw: "",
     replay_id: 1,
+    commit_timestamp: 1593616257000
   })
     .then((res) => {
       done();
     })
     .catch((err) => {
-      console.log(err);
       done(err);
     });
 });

@@ -16,6 +16,7 @@ export interface HStreamMessage {
   raw: any;
   organization_id: string;
   commit_user: string;
+  commit_timestamp: number;
 }
 
 class StreamClient {
@@ -40,7 +41,6 @@ class StreamClient {
     topics.forEach(async t => {
       const channel = `/data/${t}ChangeEvent`
       await this.Ping()
-      console.log('added ' + channel )
       this.connection.streaming.topic(channel).subscribe(async (message: any) => {
         console.log(JSON.stringify(message, null, 2))
         try {
@@ -52,6 +52,8 @@ class StreamClient {
           payload.change_type = message.payload.ChangeEventHeader.changeType
           payload.record_ids = message.payload.ChangeEventHeader.recordIds
           payload.commit_user = message.payload.ChangeEventHeader.commitUser;
+          payload.commit_timestamp = message.payload.ChangeEventHeader.commitTimestamp;
+          
           payload.organization_id = this.meta.organization_id!;
           
           message.payload.ChangeEventHeader.changedFields.forEach((cf: string) => {
@@ -71,7 +73,6 @@ class StreamClient {
    }
 
    Ping(): Promise<string> {
-     console.log('pinging')
     return this.connection.query('Select Id from Opportunity LIMIT 1').then(
       (success) => Promise.resolve('Successfully checked org ' + this.meta.organization_id + ' | ' + JSON.stringify(success)),
       (err) => Promise.reject(`failed to ping org ${this.meta.organization_id}. err: ${err}`)
@@ -88,7 +89,6 @@ export class StreamManager {
 
   async LoadPreviousStreamClients(handler: StreamMessageHandler) {
     return getRepository(SalesforceMeta).find().then(async (metas: SalesforceMeta[]) => {
-      console.log("RELOADING")
       metas.forEach(async (m) => {
         await this.AddClient(m, handler);
       })
