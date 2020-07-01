@@ -178,7 +178,6 @@ it("create event via sync event bus", async (done) => {
     change_type: "CREATE",
     fields: [StageA],
     object_type: "Account",
-    last_modified_date_key: "20190101",
     organization_id: "00D6g000003rYYlEAM",
     commit_timestamp: new Date(1592233856000)
   }
@@ -189,30 +188,24 @@ it("create event via sync event bus", async (done) => {
     change_type: "UPDATE",
     fields: [StageN],
     object_type: "Account",
-    last_modified_date_key: "20190101",
     organization_id: "00D6g000003rYYlEAM",
     commit_timestamp: new Date(1592665856000)
   }
 
   await getRepository(StreamEvent).save([first, second])
 
-  const fields = new Map<string, any>();
-  fields.set("Stage", "Z");
-  handler({
+  // use the previous values
+  await handler({
     change_type: "UPDATE",
     commit_user: "0056g000002hQheAAE",
     organization_id: "00D6g000003rYYlEAM",
     entity_name: "Account",
-    fields,
+    fields:  new Map<string, any>([["Stage", "Z"]]),
     record_ids: ["123"],
     raw: "",
     replay_id: 1,
     commit_timestamp: 1593616257000
   })
-    .then((res) => {
-      done();
-    })
-    .catch((err) => {
-      done(err);
-    });
+    
+  done();
 });

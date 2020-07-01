@@ -12,134 +12,113 @@ let dummyNumber = 0;
 const updateTaskEvents = (event: StreamEvent): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const conditions = await getRepository(TaskCondition).find({
-        where: {
-          organization_id: event.organization_id,
-          object_type: event.object_type,
-        },
-      });
-
-      const previousEvents = await getRepository(StreamEvent).find({
-        where: {
-          organization_id: event.organization_id,
-          object_id: event.object_id,
-        },
-      });
-
-      console.log(JSON.stringify(previousEvents));
-
-      let fieldEvents = new Array<{
-        field: string;
-        value: string;
-        timestamp: Date;
-      }>();
-
-      previousEvents.forEach((pe) => {
-        console.log("PE: ", pe);
-        pe.fields?.map((f) =>
-          fieldEvents.push({
-            field: f.field!,
-            value: f.value!,
-            timestamp: pe.commit_timestamp!,
-          })
-        );
-      });
-
+      if (!event.fields) {
+        reject("no fields on event");
+        return;
+      }
       let taskEvents: TaskEvent[] = [];
 
-      conditions.map((condition) => {
-        console.log(condition);
-        if (
-          condition.pre_target_values &&
-          condition.pre_target_values.length !== 0
-        ) {
-          if (
-            fieldEvents.filter((e) =>
-              condition.pre_target_values!.includes(e.value)
-            ).length === 0
-          ) {
-            console.log(
-              "fail: pre-target values is not empty and pre-target value does not exist in field history"
-            );
-            taskEvents.push({
-              last_modified_by_id: event.last_modified_by_id,
-              last_modified_date_key: event.last_modified_date_key,
-              object_id: event.object_id,
-              object_type: event.object_type,
-              organization_id: event.organization_id,
-              status: 'pre-target not met',
-              task_condition_associated: condition,
-            });
-
-            return;
-          } else {
-            console.log(
-              "success: pre-target values is not empty and pre-target value exists in field history"
-            );
-          }
-        } else {
-          console.log("neutral: no pre-target values provided");
+      await Promise.all(event.fields.map(async (field) => {
+        if (!field.value) {
+          reject("no fields on event");
+          return;
         }
 
-        if (
-          condition.disqualifying_values &&
-          condition.disqualifying_values.length !== 0
-        ) {
-          if (
-            fieldEvents.filter((e) =>
-              condition.disqualifying_values!.includes(e.value)
-            ).length === 0
-          ) {
-            console.log(
-              "success: disqualifying values is not empty and disqualifying value does not exist in field history"
-            );
-          } else {
-            console.log(
-              "fail: disqualifying values is not empty and disqualifying value exists in field history"
-            );
-            taskEvents.push({
-              last_modified_by_id: event.last_modified_by_id,
-              last_modified_date_key: event.last_modified_date_key,
-              object_id: event.object_id,
-              object_type: event.object_type,
-              organization_id: event.organization_id,
-              status: 'disqualified',
-              task_condition_associated: condition,
-            });
-            return;
-          }
-        } else {
-          console.log("neutral: no disqualifying values");
-        }
+        const conditions = await getRepository(TaskCondition).find({
+          where: {
+            organization_id: event.organization_id,
+            object_type: event.object_type,
+            field_name: field.name,
+          },
+        });
 
-        if (condition.target_values && condition.target_values.length !== 0) {
-          if (
-            fieldEvents.filter((e) =>
-              condition.target_values!.includes(e.value)
-            ).length === 0
-          ) {
-            console.log(
-              "neutral: target values is not empty and target value does not exist in field history"
-            );
-          } else {
-            console.log(
-              "completion: target values is not empty and target value exists in field history"
-            );
+        conditions.map((condition) => {
+          // todo:  I'd do switch/elif, but there may be overlap? idk
+          if (condition.disqualifying_values?.includes(field.value!)) {
+            // disqualified
             taskEvents.push({
+              check_being_performed: "disqualify",
+              status: "disqualified",
               last_modified_by_id: event.last_modified_by_id,
-              last_modified_date_key: event.last_modified_date_key,
-              object_id: event.object_id,
-              object_type: event.object_type,
+              last_modified_date: event.commit_timestamp,
               organization_id: event.organization_id,
-              status: 'target hit',
+              object_type: event.object_type,
+              object_id: event.object_id,
               task_condition_associated: condition,
+              value: field.value,
+            });
+          } else {
+            taskEvents.push({
+              check_being_performed: "disqualify",
+              status: "neutral",
+              last_modified_by_id: event.last_modified_by_id,
+              last_modified_date: event.commit_timestamp,
+              organization_id: event.organization_id,
+              object_type: event.object_type,
+              object_id: event.object_id,
+              task_condition_associated: condition,
+              value: field.value,
             });
           }
-        }
-      });
+
+          if (condition.pre_target_values?.includes(field.value!)) {
+            // pre-target met
+            taskEvents.push({
+              check_being_performed: "pre-target",
+              status: "pre-target met",
+              last_modified_by_id: event.last_modified_by_id,
+              last_modified_date: event.commit_timestamp,
+              organization_id: event.organization_id,
+              object_type: event.object_type,
+              object_id: event.object_id,
+              task_condition_associated: condition,
+              value: field.value,
+            });
+          } else {
+            taskEvents.push({
+              check_being_performed: "pre-target",
+              status: "neutral",
+              last_modified_by_id: event.last_modified_by_id,
+              last_modified_date: event.commit_timestamp,
+              organization_id: event.organization_id,
+              object_type: event.object_type,
+              object_id: event.object_id,
+              task_condition_associated: condition,
+              value: field.value,
+            });
+          }
+
+          if (condition.target_values?.includes(field.value!)) {
+            // target met
+            taskEvents.push({
+              check_being_performed: "target",
+              status: "target hit",
+              last_modified_by_id: event.last_modified_by_id,
+              last_modified_date: event.commit_timestamp,
+              organization_id: event.organization_id,
+              object_type: event.object_type,
+              object_id: event.object_id,
+              task_condition_associated: condition,
+              value: field.value,
+            });
+          } else {
+            taskEvents.push({
+              check_being_performed: "target",
+              status: "neutral",
+              last_modified_by_id: event.last_modified_by_id,
+              last_modified_date: event.commit_timestamp,
+              organization_id: event.organization_id,
+              object_type: event.object_type,
+              object_id: event.object_id,
+              task_condition_associated: condition,
+              value: field.value,
+            });
+          }
+        });
+      }));
 
       if (taskEvents.length > 0) {
-        await getRepository(TaskEvent).save(taskEvents)
+        await getRepository(TaskEvent).save(taskEvents);
       }
 
       return resolve();
@@ -161,13 +140,12 @@ export const handler = (message: HStreamMessage): Promise<void> => {
         object_id: recordID,
         object_type: message.entity_name,
         organization_id: message.organization_id,
-        last_modified_date_key: "20190101",
         fields: new Array<StreamEventFields>(),
         commit_timestamp: new Date(message.commit_timestamp),
       };
 
-      message.fields.forEach((value: any, field: string) => {
-        event.fields!.push({ field, value });
+      message.fields.forEach((value: any, key: string) => {
+        event.fields!.push({ name: key, value });
       });
 
       records.push(event);

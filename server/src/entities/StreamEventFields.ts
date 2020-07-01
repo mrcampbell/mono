@@ -9,7 +9,7 @@ export class StreamEventFields {
   @Column({
     nullable: false,
   })
-  field?: string;
+  name?: string;
 
   @Column({
     nullable: false,
