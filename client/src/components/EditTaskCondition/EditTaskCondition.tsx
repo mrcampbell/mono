@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@apollo/react-hooks";
-import { Field, Form, useFormik, FormikHelpers } from "formik";
-import "./CreateTaskCondition.css";
+import { useFormik, FormikHelpers } from "formik";
+import "./EditTaskCondition.css";
 
 import {
   QUERY_PROXY_SALESFORCE_DESCRIBE_OBJECT,
@@ -46,7 +46,7 @@ const reorder = (
   return result;
 };
 
-interface FormValues {
+export interface TaskCondition {
     object_type: string;
     field_name: string;
     pre_target_values: string[],
@@ -55,7 +55,13 @@ interface FormValues {
     name: string;
 }
 
-export default () => {
+interface Props {
+  currentValues?: TaskCondition
+  isEdit?: boolean
+  IdOfTaskConditionBeingEdited?: string
+}
+
+export default ({currentValues, isEdit}: Props) => {
   const [objectType, setObjectType] = useState("");
   const [objectLabel, setObjectLabel] = useState("");
 
@@ -94,17 +100,27 @@ export default () => {
 
   const formik = useFormik({
     initialValues: {
-      object_type: "",
-      field_name: "",
-      pre_target_values: [],
-      target_values: [],
-      disqualifying_values: [],
-      name: "",
-    } as FormValues,
-    onSubmit: (values: FormValues, formikHelpers: FormikHelpers<FormValues>) => {
+      object_type: currentValues?.object_type || "",
+      field_name: currentValues?.field_name ||"",
+      pre_target_values: currentValues?.pre_target_values ||[],
+      target_values: currentValues?.target_values || [],
+      disqualifying_values: currentValues?.disqualifying_values || [],
+      name: currentValues?.name || "",
+    } as TaskCondition,
+    onSubmit: (values: TaskCondition, formikHelpers: FormikHelpers<TaskCondition>) => {
       console.log(values)
-      create_task_condition({variables: {input: values}})
-      formikHelpers.setSubmitting(false)
+
+      if (!isEdit) {
+        create_task_condition({variables: {input: values}}).then(() => {
+          formikHelpers.setSubmitting(false)
+        }).catch(alert)
+      } else {
+        if (!isEdit) {
+          create_task_condition({variables: {input: values}}).then(() => {
+            formikHelpers.setSubmitting(false)
+          }).catch(alert)
+        }
+      }
     },
     onReset: () => {
 

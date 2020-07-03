@@ -21,19 +21,35 @@ export const MUTATION_LOGIN_WITH_SALESFORCE = gql`
   }
 `;
 
-export const MUTATION_CREATE_TASK_CONDITION = gql`
-mutation create_task_condition($input: CreateTaskCondition) {
-  create_task_condition(input:$input) {
-    id
-    name
-    organization_id
-    object_type
-    field_name
-    pre_target_values
-    target_values
-    disqualifying_values
+export const QUERY_ALL_TASK_CONDITIONS = gql`
+  query {
+    all_task_conditions {
+      id
+      name
+      organization_id
+      object_type
+      field_name
+      pre_target_values
+      target_values
+      disqualifying_values
+    }
   }
-}`
+`;
+
+export const MUTATION_CREATE_TASK_CONDITION = gql`
+  mutation create_task_condition($input: CreateTaskCondition) {
+    create_task_condition(input: $input) {
+      id
+      name
+      organization_id
+      object_type
+      field_name
+      pre_target_values
+      target_values
+      disqualifying_values
+    }
+  }
+`;
 
 export const QUERY_PROGRESSES = gql`
   query {
@@ -46,13 +62,13 @@ export const QUERY_PROGRESSES = gql`
 `;
 
 export const SUBSCRIPTION_PROGRESSES = gql`
-subscription {
-  progresses {
-    count
-    task_id
-    date_key
+  subscription {
+    progresses {
+      count
+      task_id
+      date_key
+    }
   }
-}
 `;
 
 export const QUERY_PROXY_SALESFORCE_DESCRIBE_OBJECT = gql`
@@ -69,10 +85,10 @@ export const QUERY_PROXY_SALESFORCE_DESCRIBE_OBJECT = gql`
 `;
 
 export const QUERY_PROXY_SALESFORCE_LIST_ALL_OBJECTS = gql`
-query {
-  proxy_salesforce_list_all_objects {
-    name
-    label
+  query {
+    proxy_salesforce_list_all_objects {
+      name
+      label
+    }
   }
-}
-`
+`;
