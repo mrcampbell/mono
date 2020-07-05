@@ -1,11 +1,38 @@
 // graphql.js
 
-const { ApolloServer, gql } = require('apollo-server-lambda');
-const { PubSub } = require("apollo-server");
+const { gql } = require("apollo-server-lambda");
+const {
+  PubSub,
+  Server,
+  RedisConnectionManager,
+  RedisSubscriptionManager,
+} = require("aws-lambda-graphql");
+var AWS = require("aws-sdk");
+
+const Redis = require("ioredis");
+
+const redisClient = new Redis({
+  port: 6379, // Redis port
+  host: "127.0.0.1", // Redis host
+});
 
 let dummyNumber = 0;
 
-const pubsub = new PubSub();
+const subscriptionManager = new RedisSubscriptionManager({
+  redisClient,
+});
+const connectionManager = new RedisConnectionManager({
+  subscriptionManager,
+  redisClient,
+});
+
+const pubsub = new PubSub({
+  eventStore: {
+    publish(event, payload) {
+      console.log(event, payload);
+    },
+  },
+});
 
 setInterval(() => {
   pubsub.publish(`user_123`, {
@@ -23,7 +50,7 @@ setInterval(() => {
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
-type Progress {
+  type Progress {
     count: Int!
     task_id: String!
     date_key: String!
@@ -40,15 +67,22 @@ type Progress {
 // Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
-    hello: () => 'Hello world!',
+    hello: () => "Hello world!",
   },
   Subscription: {
     progresses: {
-      subscribe: () => pubsub.asyncIterator(['user_123']),
+      subscribe: () => pubsub.subscribe("user_123"),
+      resolve: (value) => value,
     },
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new Server({
+  typeDefs,
+  resolvers,
+  connectionManager,
+  subscriptionManager,
+});
 
-exports.handler = server.createHandler();
+exports.handleWebSocket = server.createWebSocketHandler();
+exports.handleHTTP = server.createHttpHandler();

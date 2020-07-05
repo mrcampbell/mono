@@ -61,18 +61,22 @@ plugins:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
-    handler: hello.handler
+  wsHandler:
+    handler: hello.handleWebSocket
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+  httpHandler:
+    handler: hello.handleHTTP
     events:
       - http:
           path: hello
-          method: post
+          method: any
           cors: true
-      - http:
-          path: hello
-          method: get
-          cors: true
-
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
 #      - schedule: rate(10 minutes)
