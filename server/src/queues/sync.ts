@@ -6,6 +6,9 @@ import { StreamEvent } from "../entities/StreamEvent";
 import { StreamEventFields } from "../entities/StreamEventFields";
 import { TaskCondition } from "../entities/TaskCondition";
 import { TaskEvent } from "../entities/TaskEvent";
+import { TaskStatus } from "../entities/TaskStatus";
+import logger from "../logger";
+import { dateToKey } from "../util/date";
 
 let dummyNumber = 0;
 
@@ -129,6 +132,49 @@ const updateTaskEvents = (event: StreamEvent): Promise<void> => {
   });
 };
 
+const updateProgresses = (organization_id: string, object_type: string, object_id: string): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const events = await getRepository(TaskEvent).find({where: {
+        object_id,
+        object_type,
+        organization_id
+      }, order: {
+        last_modified_date: "DESC",
+        task_condition_associated: "DESC",
+      }
+    })
+
+    let current_task_condition_id: string = '';
+
+    let taskStatuses: Map<string, TaskStatus> = new Map<string, TaskStatus>();
+    events.map(event => {
+      let taskStatus: TaskStatus = {};
+      if (current_task_condition_id.length === 0) {
+        current_task_condition_id = event.task_condition_associated?.id!;
+      } else if (current_task_condition_id !== event.task_condition_associated?.id) {
+        // new task condition being processed. Store the last one, and set the current task condition id to the new one
+        taskStatuses.set(current_task_condition_id, taskStatus);
+        current_task_condition_id = event.task_condition_associated?.id!
+        taskStatus.date_key = dateToKey(event.last_modified_date!);
+      }
+
+      if (event.check_being_performed === 'pre-target' && event.status === 'pre-target met') {
+        console.log('pre-target disqualified for ' + current_task_condition_id);
+      } else if (event.check_being_performed === 'disqualify' && event.status === '') {
+        console.log('pre-target disqualified for ' + current_task_condition_id);
+      }
+
+
+    })
+
+      resolve();
+    } catch (err) {
+      reject(err)
+    }
+  })
+}
+
 export const handler = (message: HStreamMessage): Promise<void> => {
   console.log(message);
   let records = [] as StreamEvent[];
@@ -162,7 +208,12 @@ export const handler = (message: HStreamMessage): Promise<void> => {
           })
         );
         return Promise.resolve();
-      });
+      })
+      .then(async () => {
+        await Promise.all(message.record_ids.map(async object_id => {
+          await updateProgresses(message.organization_id, message.entity_name, object_id);
+        }))
+      })
   } catch (err) {
     console.log(err);
     return Promise.resolve();
@@ -191,7 +242,7 @@ export default class SynchronousEventBus {
               },
             ],
           });
-          console.log("published event");
+          logger.info("published event");
           dummyNumber++;
         }, 3000);
       } // END REMOVE DEBUG

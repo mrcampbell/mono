@@ -2,6 +2,9 @@ import { createConnection } from "typeorm";
 import { typeORMConfig } from "./src/config/typeorm";
 import SynchronousEventBus from "./src/queues/sync";
 import { server, pubsub } from "./src";
+import logger from "./src/logger";
+
+logger.info("Startup")
 
 createConnection(typeORMConfig).then(async () => {
 

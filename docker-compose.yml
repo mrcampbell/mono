@@ -12,17 +12,17 @@ services:
     environment:
       - REDIS_REPLICATION_MODE=master
     restart: always
-  api:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./server
-    volumes:
-      - /app/node_modules
-      - ./server:/app
-    environment: 
-      - DOCKER=true # default
-    ports:
-      - "4000:4000"
+  # api:
+  #   build:
+  #     dockerfile: Dockerfile.dev
+  #     context: ./server
+  #   volumes:
+  #     - /app/node_modules
+  #     - ./server:/app
+  #   environment: 
+  #     - IS_DOCKERIZED=true # default
+  #   ports:
+  #     - "4000:4000"
   # client:
   #   build:
   #     dockerfile: Dockerfile.dev
@@ -30,16 +30,15 @@ services:
   #   volumes:
   #     - /app/node_modules
   #     - ./client:/app
-  worker:
-    environment: 
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./worker
-    volumes: 
-      - /app/node_modules
-      - ./worker:/app
+  # worker:
+  #   environment: 
+  #     - IS_DOCKERIZED=true
+  #   build:
+  #     dockerfile: Dockerfile.dev
+  #     context: ./worker
+  #   volumes: 
+  #     - /app/node_modules
+  #     - ./worker:/app
   # nginx:
   #   restart: always
   #   build:
