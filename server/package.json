@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/jsforce": "^1.9.18",
+    "@types/winston": "^2.4.4",
     "apollo-server": "^2.14.5",
     "axios": "^0.19.2",
     "bull": "^3.14.0",
@@ -21,7 +22,8 @@
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.2.1",
     "redis": "^3.0.2",
-    "typeorm": "^0.2.25"
+    "typeorm": "^0.2.25",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/jest": "^26.0.3",
