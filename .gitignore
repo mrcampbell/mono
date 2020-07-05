@@ -1,3 +1,4 @@
 worker/development.env
 fuzzy
 serverless/node_modules
+serverless/hubbie-gql/serverless.yml
