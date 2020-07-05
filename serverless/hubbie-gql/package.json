@@ -1,0 +1,20 @@
+{
+  "name": "hubbie-gql",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hello.js",
+  "scripts": {
+    "local": "export SLS_DEBUG=* && serverless offline"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.15.1",
+    "apollo-server-lambda": "^2.15.1",
+    "aws-lambda-graphql": "^1.0.0-alpha.7"
+  },
+  "devDependencies": {
+    "serverless-offline": "^6.4.0"
+  }
+}
