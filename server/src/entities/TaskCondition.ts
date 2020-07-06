@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, Unique, OneToMany } from "typeorm";
+import { TaskConditionStage } from "./TaskConditionStages";
 
 @Entity({ name: "task_conditions" })
 @Unique("UQ_NAMES_PER_ORG", ["organization_id", "name"])
@@ -30,27 +31,6 @@ export class TaskCondition {
   })
   field_name?: string;
 
-  @Column({
-    nullable: false,
-    name: "pre_target_values",
-    type: 'text',
-    array: true,
-  })
-  pre_target_values?: string[];
-
-  @Column({
-    nullable: false,
-    name: "target_values",
-    type: 'text',
-    array: true
-  })
-  target_values?: string[];
-
-  @Column({
-    nullable: false,
-    name: "disqualifying_values",
-    type: 'text',
-    array: true,
-  })
-  disqualifying_values?: string[];
+  @OneToMany(type => TaskConditionStage, stage => stage.task_condition, {cascade: true, eager: true, nullable: false})
+  stages?: TaskConditionStage[];
 }

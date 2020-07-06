@@ -6,6 +6,7 @@ import { User } from '../entities/User';
 import { TaskEvent } from '../entities/TaskEvent';
 import { StreamEvent } from '../entities/StreamEvent';
 import { StreamEventFields } from '../entities/StreamEventFields';
+import { TaskConditionStage } from '../entities/TaskConditionStages';
 
 
 let shouldSynchronize = false;
@@ -17,23 +18,28 @@ if (
 }
 
 
-export let typeORMConfig: ConnectionOptions = {
+let typeORMConfig: ConnectionOptions = {
   type: "postgres",
   name: "default",
   entities: [
     SalesforceMeta,
     TaskCondition,
+    TaskConditionStage,
     User,
     TaskEvent,
     StreamEvent,
     StreamEventFields,
   ],
   logging: false,
-  host: config.postgres.host,
-  port: parseInt(config.postgres.port || '5432', 10),
-  username: config.postgres.user,
-  password: config.postgres.password,
-  database: config.postgres.database,
+  host: (config.server.isLocal) ? config.postgres.host : undefined,
+  port:(config.server.isLocal) ?  parseInt(config.postgres.port || '5432', 10) : undefined,
+  username:(config.server.isLocal) ?  config.postgres.user : undefined,
+  password:(config.server.isLocal) ?  config.postgres.password : undefined,
+  database:(config.server.isLocal) ?  config.postgres.database : undefined,
   synchronize: shouldSynchronize,
   dropSchema: (process.env.NODE_ENV == "test") ? true : false,
+  url: (!config.server.isLocal) ? process.env.DATABASE_URL : undefined
 }
+
+
+export { typeORMConfig };

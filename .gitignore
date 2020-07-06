@@ -3,3 +3,6 @@ fuzzy
 serverless/node_modules
 serverless/hubbie-gql/serverless.yml
 serverless/test-client/node_modules
+.DS_Store
+server/dist
+

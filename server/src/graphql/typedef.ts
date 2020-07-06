@@ -8,24 +8,30 @@ export default gql`
     date_key: String!
   }
 
+  type TaskConditionStage {
+    values: [String]!
+    type: String!
+  }
+
   type TaskCondition {
     id: ID!
     name: String!
     organization_id: String!
     object_type: String!
     field_name: String!
-    pre_target_values: [String]!
-    target_values: [String]!
-    disqualifying_values: [String]!
+    stages: [TaskConditionStage]!
+  }
+
+  input InputTaskConditionStage {
+    values: [String]!
+    type: String!
   }
 
   input CreateTaskCondition {
     name: String!
     object_type: String!
     field_name: String!
-    pre_target_values: [String]!
-    target_values: [String]!
-    disqualifying_values: [String]!
+    stages: [InputTaskConditionStage]!
   }
 
   type AuthenticationResponse {

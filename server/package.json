@@ -5,12 +5,17 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test jest",
-    "dev": "NODE_ENV=dev SERVICE=core  nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts'  --exec 'ts-node' server.ts  "
+    "dev": "NODE_ENV=dev SERVICE=core  nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts'  --exec 'ts-node' server.ts",
+    "build-ts": "tsc",
+    "postinstall": "npm run build-ts",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@elastic/elasticsearch": "^7.8.0",
+    "@sentry/node": "5.19.0",
     "@types/jsforce": "^1.9.18",
     "@types/winston": "^2.4.4",
     "apollo-server": "^2.14.5",

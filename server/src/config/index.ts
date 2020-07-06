@@ -39,5 +39,6 @@ export default {
   server: {
     baseURL: process.env.BASE_URL,
     appSecret: process.env.APP_SECRET,
+    isLocal: process.env.IS_LOCAL === 'true',
   }
 }

@@ -10,6 +10,7 @@ import { onError } from "apollo-link-error";
 import { ApolloLink } from "apollo-link";
 import { ApolloProvider } from "@apollo/react-hooks";
 import { setContext } from "apollo-link-context";
+import * as Sentry from '@sentry/react';
 
 import Store from "./store";
 
@@ -19,6 +20,9 @@ import App from "./pages/App/App";
 import * as serviceWorker from "./serviceWorker";
 import { OperationDefinitionNode } from "graphql";
 import AuthService from "./auth";
+
+Sentry.init({dsn: "https://ffddf3b7b948446598b902cfaa07f5bd@o416781.ingest.sentry.io/5313252"});
+
 
 // https://www.apollographql.com/docs/react/migrating/boost-migration/
 
