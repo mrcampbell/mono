@@ -19,7 +19,7 @@
     "@types/jsforce": "^1.9.18",
     "@types/winston": "^2.4.4",
     "apollo-server": "^2.14.5",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bull": "^3.14.0",
     "bull-ui": "^1.2.3",
     "dotenv": "^8.2.0",
